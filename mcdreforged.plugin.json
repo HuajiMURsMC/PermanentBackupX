@@ -1,13 +1,14 @@
 {
-	"id": "permanent_backup",
+	"id": "permanent_backup_x",
 	"version": "1.0.3",
-	"name": "Permanent Backup",
+	"name": "Permanent Backup X",
 	"description": {
-		"en_us": "A plugin for creating permanent zip world backups",
-		"zh_cn": "创建永久的用 zip 压缩的备份"
+		"en_us": "A fork of Permanent Backup with some useful features",
+		"zh_cn": "具有一些实用功能的 Permanent Backup 的 fork"
 	},
 	"author": [
-		"Fallen_Breath"
+		"Fallen_Breath",
+		"Huaji_MUR233"
 	],
 	"link": "https://github.com/MCDReforged/PermanentBackup",
 	"dependencies": {
@@ -15,5 +16,6 @@
 	},
 	"resources": [
 		"LICENSE"
-	]
+	],
+	"entrypoint": "permanent_backup_x.entry"
 }
