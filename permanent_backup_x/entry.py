@@ -173,6 +173,9 @@ def reset_timer(config: Configure, cancel=False) -> time.struct_time:
 
 
 def cmd_reset_timer(config: Configure, source: CommandSource):
+    if timer is not None:
+        info_message(source, "未开启自动备份功能")
+        return
     next_time = reset_timer(config)
     info_message(source, "已重置计时器")
     info_message(source, "下次自动备份时间: §3{}§r".format(time.strftime("%Y/%m/%d %H:%M:%S", next_time)))
