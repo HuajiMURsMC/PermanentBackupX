@@ -3,20 +3,16 @@ PermanentBackupX
 
 [PermanentBackup](https://github.com/MCDReforged/PermanentBackup) 的一个 fork，支持了[更多压缩格式](#支持的压缩格式)、定时备份以及文件加密
 
-## 注意!
+### 支持的压缩格式
 
-***扩展模块需手动安装，默认情况下不依赖任何扩展模块***
-
-## 支持的压缩格式
-
-| 格式名称    | 依赖的包                                      |
-|---------|-------------------------------------------|
-| `zip`   | `N/A`                                     |
-| `tar`   | `N/A`                                     |
-| `xztar` | `N/A`                                     |
-| `bztar` | `N/A`                                     |
-| `gztar` | `N/A`                                     |
-| `7z`    | [`py7zr`](https://pypi.org/project/py7zr) |
+| 格式名称 | 依赖的包                                  |
+| -------- | ----------------------------------------- |
+| `zip`    | `N/A`                                     |
+| `tar`    | `N/A`                                     |
+| `xztar`  | `N/A`                                     |
+| `bztar`  | `N/A`                                     |
+| `gztar`  | `N/A`                                     |
+| `7z`     | [`py7zr`](https://pypi.org/project/py7zr) |
 
 PermanentBackup
 -----
