@@ -149,6 +149,10 @@ def register_command(server: PluginServerInterface, config: Configure):
         then(
             permed_literal('listall').
             runs(lambda src: list_backup(config, src, {}, amount=-1))
+        ).
+        then(
+            permed_literal('reset_timer').
+            runs(partial(cmd_reset_timer, config))
         )
     )
 
@@ -166,6 +170,12 @@ def reset_timer(config: Configure, cancel=False) -> time.struct_time:
     if not cancel:
         timer = Timer(config.auto_backup_interval, auto_create_backup)
     return time.localtime(time_since_backup + config.auto_backup_interval)
+
+
+def cmd_reset_timer(config: Configure, source: CommandSource):
+    next_time = reset_timer(config)
+    info_message(source, "已重置计时器")
+    info_message(source, "下次自动备份时间: §3{}§r".format(time.strftime("%Y/%m/%d %H:%M:%S", next_time)))
 
 
 def on_backup_done(config: Configure, server: PluginServerInterface):
