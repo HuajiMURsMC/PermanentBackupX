@@ -189,7 +189,7 @@ def on_load(server: PluginServerInterface, old):
         creating_backup = old.creating_backup
     server.register_help_message(config.prefix, '创建永久备份')
     register_command(server, config)
-    server.register_event_listener(BACKUP_DONE_EVENT, lambda svr: on_backup_done(config, svr))
+    server.register_event_listener(BACKUP_DONE_EVENT, partial(on_backup_done, config))
     if config.auto_backup:
         timer = Timer(config.auto_backup_interval, auto_create_backup)
         timer.start()
