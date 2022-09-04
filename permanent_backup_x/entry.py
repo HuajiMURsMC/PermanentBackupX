@@ -1,5 +1,6 @@
 from functools import partial
-from threading import Lock
+from threading import Lock, Timer
+from typing import Optional
 import collections
 import shutil
 import time
@@ -16,11 +17,13 @@ except ImportError:
     pass
 
 from permanent_backup_x.config import Configure
-from permanent_backup_x.constant import HELP_MESSAGE, CONFIG_FILE
+from permanent_backup_x.constant import HELP_MESSAGE, CONFIG_FILE, BACKUP_DONE_EVENT
 
 game_saved = False
 plugin_unloaded = False
 creating_backup = Lock()
+timer: Optional[Timer] = None
+time_since_backup = time.time()
 
 
 def info_message(source: CommandSource, msg: str, broadcast=False):
@@ -105,6 +108,7 @@ def create_backup(config: Configure, source: CommandSource, context: dict):
         creating_backup.release()
         if config.turn_off_auto_save and not auto_save_on:
             server.execute('save-on')
+    server.dispatch_event(BACKUP_DONE_EVENT, ())
 
 
 def list_backup(config: Configure, source: CommandSource, context: dict, *, amount=10):
@@ -149,6 +153,28 @@ def register_command(server: PluginServerInterface, config: Configure):
     )
 
 
+def auto_create_backup(server: PluginServerInterface, config: Configure):
+    source = server.get_plugin_command_source()
+    info_message(source, "每§6{}§r分钟一次的定时备份触发".format(config.auto_backup_interval), broadcast=True)
+    create_backup(config, source, {"cmt": "定时备份"})
+
+
+def reset_timer(config: Configure, cancel=False) -> time.struct_time:
+    global time_since_backup, timer
+    time_since_backup = time.time()
+    timer.cancel()
+    if not cancel:
+        timer = Timer(config.auto_backup_interval, auto_create_backup)
+    return time.localtime(time_since_backup + config.auto_backup_interval)
+
+
+def on_backup_done(config: Configure, server: PluginServerInterface):
+    source = server.get_plugin_command_source()
+    info_message(source, "备份完毕，重置定时器", broadcast=True)
+    reset_timer(config)
+    info_message(source, "下次自动备份时间: §3{}§r".format(time.strftime("%Y/%m/%d %H:%M:%S", )))
+
+
 def on_info(server: PluginServerInterface, info):
     if not info.is_user:
         if info.content == 'Saved the game':
@@ -157,17 +183,24 @@ def on_info(server: PluginServerInterface, info):
 
 
 def on_load(server: PluginServerInterface, old):
-    global creating_backup
+    global creating_backup, timer
     config = server.load_config_simple(CONFIG_FILE, target_class=Configure, in_data_folder=False)
     if hasattr(old, 'creating_backup') and type(old.creating_backup) == type(creating_backup):
         creating_backup = old.creating_backup
     server.register_help_message(config.prefix, '创建永久备份')
     register_command(server, config)
+    server.register_event_listener(BACKUP_DONE_EVENT, lambda svr: on_backup_done(config, svr))
+    if config.auto_backup:
+        timer = Timer(config.auto_backup_interval, auto_create_backup)
+        timer.start()
 
 
 def on_unload(server: PluginServerInterface):
     global plugin_unloaded
     plugin_unloaded = True
+    if timer is not None:
+        info_message(server.get_plugin_command_source(), "插件卸载，停止时钟", broadcast=True)
+        timer.cancel()
 
 
 def on_mcdr_stop(server: PluginServerInterface):
