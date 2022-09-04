@@ -171,8 +171,8 @@ def reset_timer(config: Configure, cancel=False) -> time.struct_time:
 def on_backup_done(config: Configure, server: PluginServerInterface):
     source = server.get_plugin_command_source()
     info_message(source, "备份完毕，重置定时器", broadcast=True)
-    reset_timer(config)
-    info_message(source, "下次自动备份时间: §3{}§r".format(time.strftime("%Y/%m/%d %H:%M:%S", )))
+    next_time = reset_timer(config)
+    info_message(source, "下次自动备份时间: §3{}§r".format(time.strftime("%Y/%m/%d %H:%M:%S", next_time)))
 
 
 def on_info(server: PluginServerInterface, info):
