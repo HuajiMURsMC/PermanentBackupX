@@ -1,7 +1,7 @@
 PermanentBackupX
 -----
 
-[PermanentBackup](https://github.com/MCDReforged/PermanentBackup) 的一个 fork，支持了[更多压缩格式](#支持的压缩格式)、定时备份、文件加密以及哈希校验
+[PermanentBackup](https://github.com/MCDReforged/PermanentBackup) 的一个 fork，支持了[更多压缩格式](#支持的压缩格式)、定时备份以及文件加密
 
 ## 注意!
 
