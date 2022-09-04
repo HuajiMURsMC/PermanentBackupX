@@ -1,13 +1,13 @@
-from functools import partial
 from threading import Lock, Timer
+from functools import partial
 from typing import Optional
 import collections
 import shutil
 import time
 import os
 
-from mcdreforged.api.types import PluginServerInterface, CommandSource
 from mcdreforged.api.command import Literal, UnknownCommand, GreedyText, Integer
+from mcdreforged.api.types import PluginServerInterface, CommandSource
 from mcdreforged.api.decorator.new_thread import new_thread
 try:
     import py7zr
@@ -16,8 +16,8 @@ try:
 except ImportError:
     pass
 
-from permanent_backup_x.config import Configure
 from permanent_backup_x.constant import HELP_MESSAGE, CONFIG_FILE, BACKUP_DONE_EVENT
+from permanent_backup_x.config import Configure
 
 game_saved = False
 plugin_unloaded = False
