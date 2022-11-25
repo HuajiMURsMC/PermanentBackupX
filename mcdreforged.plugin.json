@@ -1,6 +1,6 @@
 {
 	"id": "permanent_backup_x",
-	"version": "1.0.3",
+	"version": "1.1.0",
 	"name": "Permanent Backup X",
 	"description": {
 		"en_us": "A fork of Permanent Backup with some useful features",
@@ -12,7 +12,7 @@
 	],
 	"link": "https://github.com/HuajiMURsMC/PermanentBackupX",
 	"dependencies": {
-		"mcdreforged": ">=2.0.0-"
+		"mcdreforged": ">=2.0.0"
 	},
 	"resources": [
 		"LICENSE"
