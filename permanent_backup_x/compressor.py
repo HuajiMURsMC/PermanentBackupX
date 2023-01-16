@@ -15,8 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from contextlib import AbstractContextManager
-from typing import Dict, Union, Type
-from pathlib import Path
+from typing import Dict, Type
 from abc import ABC
 import tarfile
 import os
@@ -30,7 +29,7 @@ from permanent_backup_x.config import Configure
 compressors: Dict[str, Type['AbstractCompressor']] = {}
 
 
-def register(clazz: Type['AbstractCompressor']):
+def register_compressor(clazz: Type['AbstractCompressor']):
     compressors[clazz._format] = clazz
     return clazz
 
@@ -44,7 +43,7 @@ class AbstractCompressor(AbstractContextManager, ABC):
         self.config = config
         if not file.endswith(suffix := self.suffix):
             file += suffix
-        self.file = Path(file)
+        self.file = file
 
     @property
     def format(self) -> str:
@@ -54,38 +53,38 @@ class AbstractCompressor(AbstractContextManager, ABC):
     def suffix(self) -> str:
         return self._suffix
 
-    def write_all(self, directory: Union[Path, str]):
+    def write_all(self, directory: str):
         cwd = os.getcwd()
         files_or_dirs = os.listdir(directory)
         os.chdir(directory)
         for file_or_dir in files_or_dirs:
-            self._write_all(Path(file_or_dir))
+            self._write_all(file_or_dir)
         os.chdir(cwd)
 
-    def _write_all(self, path: Path):
-        if path.is_file():
+    def _write_all(self, path: str):
+        if os.path.isfile(path):
             self.write(path)
-        elif path.is_dir():
-            if not path.samefile("."):
+        elif os.path.isdir(path):
+            if not os.path.samefile(path, "."):
                 self.write(path)
             for nm in sorted(os.listdir(str(path))):
-                self._write_all(path.joinpath(nm))
+                self._write_all(os.path.join(path, nm))
         else:
             return
 
-    def write(self, path: Path):
+    def write(self, path: str):
         raise NotImplementedError
 
     def __enter__(self) -> 'AbstractCompressor':
         raise NotImplementedError
 
 
-@register
+@register_compressor
 class ZipCompressor(AbstractCompressor):
     _format = "zip"
     _suffix = ".zip"
 
-    def write(self, path: Path):
+    def write(self, path: str):
         if self.config.backup_password is not None:
             self.zf.setpassword(self.config.backup_password.encode("utf8"))
         self.zf.write(path)
@@ -101,12 +100,12 @@ class ZipCompressor(AbstractCompressor):
         self.zf.close()
 
 
-@register
+@register_compressor
 class SevenZipCompressor(AbstractCompressor):
     _format = "7z"
     _suffix = ".7z"
 
-    def write(self, path: Path):
+    def write(self, path: str):
         self.zf.write(path)
 
     def __enter__(self) -> 'AbstractCompressor':
@@ -117,12 +116,12 @@ class SevenZipCompressor(AbstractCompressor):
         self.zf.close()
 
 
-@register
+@register_compressor
 class TarCompressor(AbstractCompressor):
     _format = "tar"
     _suffix = ".tar"
 
-    def write(self, path: Path):
+    def write(self, path: str):
         self.tarfile.add(path)
 
     def __enter__(self) -> 'AbstractCompressor':
@@ -135,19 +134,19 @@ class TarCompressor(AbstractCompressor):
         self.tarfile.close()
 
 
-@register
+@register_compressor
 class GZipCompressor(TarCompressor):
     _format = "gz"
     _suffix = ".tar.gz"
 
 
-@register
+@register_compressor
 class BZip2Compressor(TarCompressor):
     _format = "bz2"
     _suffix = ".tar.bz2"
 
 
-@register
+@register_compressor
 class XZipCompressor(TarCompressor):
     _format = "xz"
     _suffix = ".tar.xz"

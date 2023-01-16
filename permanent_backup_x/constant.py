@@ -29,4 +29,5 @@ HELP_MESSAGE = '''
 §7{0} listall§r 显示所有备份的信息
 §7{0} reset_timer§r 重置计时器
 '''.strip()
-BACKUP_DONE_EVENT = PluginEvent("permanent_backup_x.backup_done")
+PRE_BACKUP_EVENT = PluginEvent("permanent_backup_x.pre_backup")
+POST_BACKUP_EVENT = PluginEvent("permanent_backup_x.post_backup")

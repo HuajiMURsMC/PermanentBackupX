@@ -26,7 +26,7 @@ from mcdreforged.api.command import Literal, UnknownCommand, GreedyText, Integer
 from mcdreforged.api.types import PluginServerInterface, CommandSource, ServerInterface
 from mcdreforged.api.decorator.new_thread import new_thread
 
-from permanent_backup_x.constant import HELP_MESSAGE, CONFIG_FILE, BACKUP_DONE_EVENT
+from permanent_backup_x.constant import HELP_MESSAGE, CONFIG_FILE, POST_BACKUP_EVENT, PRE_BACKUP_EVENT
 from permanent_backup_x.compressor import compressors
 from permanent_backup_x.config import Configure
 
@@ -70,6 +70,7 @@ def create_backup(config: Configure, source: CommandSource, context: dict):
     try:
         info_message(source, '备份中...请稍等', broadcast=True)
         start_time = time.time()
+        server.dispatch_event(PRE_BACKUP_EVENT, (start_time,))
 
         # save world
         if config.turn_off_auto_save:
@@ -107,12 +108,14 @@ def create_backup(config: Configure, source: CommandSource, context: dict):
         info_message(source, '创建压缩包中...', broadcast=True)
         with compressors[config.format](server, config, file_without_suffix) as comp:
             comp.write_all(config.temp_folder)
-            output_file = str(comp.file)
+            output_file = comp.file
 
         # cleaning worlds
         shutil.rmtree(config.temp_folder)
 
-        info_message(source, '备份§a完成§r，耗时{}秒'.format(round(time.time() - start_time, 1)), broadcast=True)
+        time_spent = time.time() - start_time
+        info_message(source, '备份§a完成§r，耗时{}秒'.format(round(time_spent, 1)), broadcast=True)
+        server.dispatch_event(POST_BACKUP_EVENT, (start_time, time_spent, output_file))
     except Exception as e:
         info_message(source, '备份§a失败§r，错误代码{}'.format(e), broadcast=True)
         server.logger.exception('创建备份失败')
@@ -120,7 +123,6 @@ def create_backup(config: Configure, source: CommandSource, context: dict):
         creating_backup.release()
         if config.turn_off_auto_save and not auto_save_on:
             server.execute('save-on')
-    server.dispatch_event(BACKUP_DONE_EVENT, (output_file,))
 
 
 def list_backup(config: Configure, source: CommandSource, context: dict, *, amount=10):
@@ -194,7 +196,7 @@ def cmd_reset_timer(config: Configure, source: CommandSource):
     info_message(source, "下次自动备份时间: §3{}§r".format(time.strftime("%Y/%m/%d %H:%M:%S", next_time)))
 
 
-def on_backup_done(config: Configure, server: ServerInterface, _):
+def post_backup(config: Configure, server: ServerInterface, *_):
     if timer is not None:
         source = server.get_plugin_command_source()
         info_message(source, "备份完毕，重置定时器", broadcast=True)
@@ -217,7 +219,7 @@ def on_load(server: PluginServerInterface, old):
         creating_backup = old.creating_backup
     server.register_help_message(config.prefix, '创建永久备份')
     register_command(server, config)
-    server.register_event_listener(BACKUP_DONE_EVENT, partial(on_backup_done, config))
+    server.register_event_listener(POST_BACKUP_EVENT, partial(post_backup, config))
     if config.auto_backup:
         timer = Timer(config.interval, lambda: auto_create_backup(server, config))
         timer.start()
